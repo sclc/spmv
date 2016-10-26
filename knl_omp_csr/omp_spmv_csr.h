@@ -12,9 +12,10 @@
 #define IDX_TYPE int
 #endif
 
-#ifndef SPMV_DEBUG
-#define SPMV_DEBUG_A
+#ifndef CSR_SPMV_DEBUG
+#define CSR_SPMV_DEBUG_A
 
+#define CSR_SPMV_DEBUG
 #endif
 
 #ifdef	__cplusplus

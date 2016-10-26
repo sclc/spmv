@@ -3,7 +3,7 @@
 void spmv_csr(denseMat vec_result, csrMat mat, denseMat vec)
 {
 
-#ifdef SPMV_DEBUG_A
+#ifdef CSR_SPMV_DEBUG_A
 	assert (vec_result.global_num_col == 1);
 	assert (vec.global_num_col == 1);
 #endif
