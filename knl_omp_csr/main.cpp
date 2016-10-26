@@ -7,6 +7,9 @@
 #include "DataTypes.h"
 #include "readMTX.h"
 #include "mat_coo_csr_converter.h"
+#include "dense_mat_generator.h"
+#include "omp_spmv_csr.h"
+#include "error_checker.h"
 
 #ifndef VAL_TYPE
 #define VAL_TYPE double
@@ -18,7 +21,9 @@
 
 //#define DEBUG_A
 //#define DEBUG_B
-#define DEBUG_C
+//#define DEBUG_C
+//#define DEBUG_D
+#define DEBUG_E
 
 using namespace std;
 
@@ -76,6 +81,42 @@ int main (int argc, char* argv[])
 	}
 
 #endif
+
+	denseMat vec_result, vec, vec_checker;
+	VAL_TYPE val_min, val_max;
+	val_min = 10.;
+	val_max = 100.;
+	IDX_TYPE vec_ncol = 1;
+
+	generate_dense_mat(&vec, csrA.num_rows, vec_ncol, val_min, val_max);
+	generate_dense_mat_uniform_val(&vec_result, csrA.num_rows, vec_ncol, 66.66);
+	generate_dense_mat_uniform_val(&vec_checker, csrA.num_rows, vec_ncol, 66.66);
+#ifdef DEBUG_D
+
+	//cout<< "#vec_row:"<<vec.global_num_row<<" , #vec_col:"<<vec.global_num_col<<endl;
+	cout<< "#vec_row:"<<vec_result.global_num_row<<" , #vec_col:"<<vec_result.global_num_col<<endl;
+
+	IDX_TYPE db_d_idx;
+	for (db_d_idx = 0; db_d_idx<vec.global_num_row*vec.global_num_col; db_d_idx++)
+//		cout<<vec.data[db_d_idx]<<", ";
+		cout<<vec_result.data[db_d_idx]<<", ";
+	cout<<endl;
+
+#endif
+
+	spmv_csr(vec_result, csrA, vec);
+#ifdef DEBUG_E
+
+	cout<< "#vec_row:"<<vec_result.global_num_row<<" , #vec_col:"<<vec_result.global_num_col<<endl;
+
+	IDX_TYPE db_e_idx;
+	for (db_e_idx = 0; db_e_idx<vec.global_num_row*vec.global_num_col; db_e_idx++)
+		cout<<vec_result.data[db_e_idx]<<", ";
+	cout<<endl;
+#endif
+
+	spmv_coo(vec_checker, cooA, vec);
+	results_comparsion (vec_result, vec_checker);
 
 	return 0;
 }
