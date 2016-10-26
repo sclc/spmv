@@ -21,6 +21,8 @@ extern "C" {
 void generate_dense_mat(denseMat * mat, IDX_TYPE num_rows, IDX_TYPE num_cols,\
                      VAL_TYPE ranMin, VAL_TYPE ranMax);
 
+void generate_dense_mat_uniform_val(denseMat * mat, IDX_TYPE num_rows, IDX_TYPE num_cols, VAL_TYPE val);
+
 #ifdef	__cplusplus
 }
 #endif
