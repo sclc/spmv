@@ -10,6 +10,7 @@
 #include "dense_mat_generator.h"
 #include "omp_spmv_csr.h"
 #include "error_checker.h"
+#include "peformance_profiling.h"
 
 #ifndef VAL_TYPE
 #define VAL_TYPE double
@@ -19,11 +20,15 @@
 #define IDX_TYPE int
 #endif
 
+#ifndef EXP_NUM
+#define EXP_NUM 1
+#endif
+
 //#define DEBUG_A
 //#define DEBUG_B
 //#define DEBUG_C
 //#define DEBUG_D
-#define DEBUG_E
+//#define DEBUG_E
 
 using namespace std;
 
@@ -44,6 +49,8 @@ int main (int argc, char* argv[])
 	matInfo mat_info;
 	csrMat csrA;	
 	cooMat cooA;
+
+	double t1,t2;
 
 
 	readMtx_info_and_coo(mat_path, mat_filename, &mat_info, &cooA);
@@ -104,7 +111,20 @@ int main (int argc, char* argv[])
 
 #endif
 
-	spmv_csr(vec_result, csrA, vec);
+	t1 = mysecond();
+	
+	for(int exp_idx=0; exp_idx<EXP_NUM; exp_idx++)
+	{
+		//spmv_csr(vec_result, csrA, vec);
+		//omp_spmv_csr_v1(vec_result, csrA, vec);
+		omp_spmv_csr_v2(vec_result, csrA, vec);
+	}
+	t2 = mysecond();
+
+	cout<< setprecision(12)<<(t2-t1)/(double)EXP_NUM<<"sec pased"<<endl;
+	cout<< "performance:"<<setprecision(12)<<( (double)(2*csrA.nnz)/(double)(1024*1024*1024) )/( t2-t1 )
+	    <<"GFlops"<<endl;
+
 #ifdef DEBUG_E
 
 	cout<< "#vec_row:"<<vec_result.global_num_row<<" , #vec_col:"<<vec_result.global_num_col<<endl;
