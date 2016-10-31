@@ -22,7 +22,7 @@
 #endif
 
 #ifndef EXP_NUM
-#define EXP_NUM 1
+#define EXP_NUM 100
 #endif
 
 #define CHECK_RES_WITH_COO
@@ -71,13 +71,25 @@ int main (int argc, char* argv[])
 	Converter_Coo2Dia (cooA, &diaA);
 #ifdef DEBUG_C
 	
-	IDX_TYPE db_c_idx;
+	IDX_TYPE db_c_idx, db_c_ondiag_idx;
 	cout<< "#row="<<diaA.num_rows<<", #col="<<diaA.num_cols<<", nnz="<<diaA.nnz
 	<< ", num_diags="<<diaA.num_diags<<endl;
 
-	// for (db_c_idx=0; db_c_idx< diaA.nnz; db_c_idx++)
-	// 	cout<<"("<<cooA.rowIdx[db_c_idx]<<" , "<<cooA.colIdx[db_c_idx]<<" )"<<" ";
+	for (db_c_idx =0 ; db_c_idx< diaA.num_diags; db_c_idx++)
+	{
+		std::cout<<diaA.diag_offset_id[db_c_idx]<<" : ";
+
+		for (db_c_ondiag_idx=0; db_c_ondiag_idx<diaA.num_rows; db_c_ondiag_idx++)
+		{
+			cout << diaA.diag_zone[db_c_idx*diaA.num_rows+db_c_ondiag_idx]<< ", ";
+		}
+		std::cout<<std::endl;
+	}
+	std::cout<<std::endl<<std::endl;
+
 	draw_cooMat_pattern(cooA);
+
+	return 0;
 
 #endif
 
@@ -89,6 +101,7 @@ int main (int argc, char* argv[])
 
 	generate_dense_mat(&vec, diaA.num_rows, vec_ncol, val_min, val_max);
 	generate_dense_mat_uniform_val(&vec_result, diaA.num_rows, vec_ncol, 66.66);
+	// generate_dense_mat_uniform_val(&vec_checker, diaA.num_rows, vec_ncol, 66.66);
 
 #ifdef CHECK_RES_WITH_COO
 	generate_dense_mat_uniform_val(&vec_checker, diaA.num_rows, vec_ncol, 66.66);
@@ -105,7 +118,7 @@ int main (int argc, char* argv[])
 		cout<<vec_result.data[db_d_idx]<<", ";
 	cout<<endl;
 
-#endif
+#endif /*DEBUG_D*/
 
 #ifdef CHECK_RES_WITH_COO
 	spmv_coo(vec_checker, cooA, vec);
@@ -118,7 +131,7 @@ int main (int argc, char* argv[])
 	
 	for(int exp_idx=0; exp_idx<EXP_NUM; exp_idx++)
 	{
-		spmv_dia(vec_result, diaA, vec);
+		spmv_dia(&vec_result, diaA, vec);
 	}
 	t2 = mysecond();
 
@@ -134,8 +147,10 @@ int main (int argc, char* argv[])
 	for (db_e_idx = 0; db_e_idx<vec.global_num_row*vec.global_num_col; db_e_idx++)
 		cout<<vec_result.data[db_e_idx]<<", ";
 	cout<<endl;
-#endif
+#endif /*DEBUG_E*/
 
+	// spmv_coo(vec_checker, cooA, vec);
+	// results_comparsion (vec_result, vec_checker);
 #ifdef CHECK_RES_WITH_COO
 	results_comparsion (vec_result, vec_checker);
 #endif /*CHECK_RES_WITH_COO*/

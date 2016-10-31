@@ -1,16 +1,16 @@
 #include "omp_spmv_dia.h"
 
-void spmv_dia(denseMat vec_result, diaMat mat, denseMat vec)
+void spmv_dia(denseMat * vec_result, diaMat mat, denseMat vec)
 {
 #ifdef DIA_SPMV_DEBUG_A
-	assert (vec_result.global_num_row == mat.num_rows);
-	assert (vec_result.global_num_col == 1);
+	assert (vec_result->global_num_row == mat.num_rows);
+	assert (vec_result->global_num_col == 1);
 	assert (vec.global_num_col == 1);
 #endif
 
 	// for profiling the kernel, new re-allocate vec_result for every call
-	free(vec_result.data);
-	vec_result.data = (VAL_TYPE *) calloc ( vec_result.global_num_row * vec_result.global_num_col,
+	free(vec_result->data);
+	vec_result->data = (VAL_TYPE *) calloc ( vec_result->global_num_row * vec_result->global_num_col,
 											sizeof(VAL_TYPE) );
 
 	// assume mat is square now
@@ -30,7 +30,7 @@ void spmv_dia(denseMat vec_result, diaMat mat, denseMat vec)
 			{
 				rowid = on_diag_idx;
 				colid = offset + on_diag_idx;
-				vec_result.data[rowid] += mat.diag_zone[diag_offset_start + on_diag_idx] 
+				vec_result->data[rowid] += mat.diag_zone[diag_offset_start + on_diag_idx] 
 									* vec.data[colid];
 			}
 		}
@@ -40,7 +40,7 @@ void spmv_dia(denseMat vec_result, diaMat mat, denseMat vec)
 			{
 				rowid = on_diag_idx;
 				colid = offset + on_diag_idx;
-				vec_result.data[rowid] += mat.diag_zone[diag_offset_start + on_diag_idx] 
+				vec_result->data[rowid] += mat.diag_zone[diag_offset_start + on_diag_idx] 
 									* vec.data[colid];
 			}
 		}

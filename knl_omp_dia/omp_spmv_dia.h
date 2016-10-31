@@ -21,7 +21,7 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-	void spmv_dia(denseMat vec_result, diaMat mat, denseMat vec);
+	void spmv_dia(denseMat *vec_result, diaMat mat, denseMat vec);
 
 #ifdef	__cplusplus
 }
