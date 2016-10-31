@@ -13,7 +13,7 @@
 #endif
 
 #ifndef DIA_SPMV_DEBUG
-//#define DIA_SPMV_DEBUG_A
+#define DIA_SPMV_DEBUG_A
 
 #define DIA_SPMV_DEBUG
 #endif
