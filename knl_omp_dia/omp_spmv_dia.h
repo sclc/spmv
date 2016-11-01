@@ -22,6 +22,8 @@
 extern "C" {
 #endif
 	void spmv_dia(denseMat *vec_result, diaMat mat, denseMat vec);
+	void omp_spmv_dia_v1(denseMat *vec_result, diaMat mat, denseMat vec);
+
 
 #ifdef	__cplusplus
 }
