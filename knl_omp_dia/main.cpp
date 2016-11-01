@@ -135,8 +135,9 @@ int main (int argc, char* argv[])
 	}
 	t2 = mysecond();
 
-	cout<< setprecision(12)<<(t2-t1)/(double)EXP_NUM<<"sec pased"<<endl;
-	cout<< "performance:"<<setprecision(12)<<( (double)(2*diaA.nnz)/(double)(1024*1024*1024) )/( t2-t1 )
+	VAL_TYPE per_loop_time_cost = (t2-t1)/(double)EXP_NUM;
+	cout<< setprecision(12)<<per_loop_time_cost<<"sec pased"<<endl;
+	cout<< "performance:"<<setprecision(12)<<( (double)(2*diaA.nnz)/(double)(1024*1024*1024) )/per_loop_time_cost
 	    <<"GFlops"<<endl;
 
 #ifdef DEBUG_E
