@@ -9,7 +9,7 @@ void spmv_dia(denseMat * vec_result, diaMat mat, denseMat vec)
 #endif
 
 	// for profiling the kernel, new re-allocate vec_result for every call
-	free(vec_result->data);
+	if(vec_result->data != NULL) free(vec_result->data);
 	vec_result->data = (VAL_TYPE *) calloc ( vec_result->global_num_row * vec_result->global_num_col,
 											sizeof(VAL_TYPE) );
 
@@ -55,7 +55,7 @@ void omp_spmv_dia_v1(denseMat * vec_result, diaMat mat, denseMat vec)
 #endif
 
 	// for profiling the kernel, new re-allocate vec_result for every call
-	free(vec_result->data);
+	if(vec_result->data != NULL) free(vec_result->data);
 	vec_result->data = (VAL_TYPE *) calloc ( vec_result->global_num_row * vec_result->global_num_col,
 											sizeof(VAL_TYPE) );
 
