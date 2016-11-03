@@ -69,6 +69,23 @@ typedef struct
     VAL_TYPE * data;
 } denseMat;
 
+typedef struct
+{
+    IDX_TYPE num_rows, num_cols, nnz, num_diags;
+    IDX_TYPE * diag_offset_id;
+    VAL_TYPE * diag_zone;
+    
+}diaMat;
+
+typedef struct 
+{
+    IDX_TYPE ell_num_rows, ell_num_cols, ell_nnz;
+    IDX_TYPE ell_row_length;
+    IDX_TYPE * ell_col_idx;
+    VAL_TYPE * ell_data;
+    
+}ellMat;
+
 
 // #ifdef  __cplusplus
 // }

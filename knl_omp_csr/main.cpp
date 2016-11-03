@@ -11,6 +11,7 @@
 #include "omp_spmv_csr.h"
 #include "error_checker.h"
 #include "peformance_profiling.h"
+#include "common.h"
 
 #ifndef VAL_TYPE
 #define VAL_TYPE double
@@ -21,8 +22,10 @@
 #endif
 
 #ifndef EXP_NUM
-#define EXP_NUM 1
+#define EXP_NUM 100
 #endif
+
+#define CHECK_CSR_WITH_COO
 
 //#define DEBUG_A
 //#define DEBUG_B
@@ -97,7 +100,11 @@ int main (int argc, char* argv[])
 
 	generate_dense_mat(&vec, csrA.num_rows, vec_ncol, val_min, val_max);
 	generate_dense_mat_uniform_val(&vec_result, csrA.num_rows, vec_ncol, 66.66);
+
+#ifdef CHECK_CSR_WITH_COO
 	generate_dense_mat_uniform_val(&vec_checker, csrA.num_rows, vec_ncol, 66.66);
+#endif /*CHECK_CSR_WITH_COO*/
+
 #ifdef DEBUG_D
 
 	//cout<< "#vec_row:"<<vec.global_num_row<<" , #vec_col:"<<vec.global_num_col<<endl;
@@ -109,21 +116,28 @@ int main (int argc, char* argv[])
 		cout<<vec_result.data[db_d_idx]<<", ";
 	cout<<endl;
 
-#endif
+#endif/*DEBUG_D*/
+
+#ifdef CHECK_CSR_WITH_COO
+	spmv_coo(vec_checker, cooA, vec);
+#endif /*CHECK_CSR_WITH_COO*/
+	
+	//del coo
+	delete_cooMat(&cooA);
 
 	t1 = mysecond();
 	
 	for(int exp_idx=0; exp_idx<EXP_NUM; exp_idx++)
 	{
-		//spmv_csr(vec_result, csrA, vec);
+		spmv_csr(vec_result, csrA, vec);
 		//omp_spmv_csr_v1(vec_result, csrA, vec);
-		omp_spmv_csr_v2(vec_result, csrA, vec);
+		//omp_spmv_csr_v2(vec_result, csrA, vec);
 	}
 	t2 = mysecond();
 
-	cout<< setprecision(12)<<(t2-t1)/(double)EXP_NUM<<"sec pased"<<endl;
-	cout<< "performance:"<<setprecision(12)<<( (double)(2*csrA.nnz)/(double)(1024*1024*1024) )/( t2-t1 )
-	    <<"GFlops"<<endl;
+	VAL_TYPE per_loop_time_cost = (t2-t1)/(double)EXP_NUM;
+	cout<< setprecision(12)<<per_loop_time_cost<<"sec pased"<<endl;
+	cout<< "performance:"<<setprecision(12)<<( (double)(2*csrA.nnz)/(double)(1024*1024*1024) )/per_loop_time_cost <<"GFlops"<<endl;
 
 #ifdef DEBUG_E
 
@@ -135,8 +149,10 @@ int main (int argc, char* argv[])
 	cout<<endl;
 #endif
 
-	spmv_coo(vec_checker, cooA, vec);
+
+#ifdef CHECK_CSR_WITH_COO
 	results_comparsion (vec_result, vec_checker);
+#endif
 
 	return 0;
 }
