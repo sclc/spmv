@@ -22,7 +22,7 @@
 #endif
 
 #ifndef EXP_NUM
-#define EXP_NUM 100
+#define EXP_NUM 50
 #endif
 
 #define CHECK_RES_WITH_COO
@@ -125,13 +125,14 @@ int main (int argc, char* argv[])
 #endif/*CHECK_RES_WITH_COO*/
 
 	// delete COO
-	delete_cooMat(cooA);
+	delete_cooMat(&cooA);
 
 	t1 = mysecond();
 	
 	for(int exp_idx=0; exp_idx<EXP_NUM; exp_idx++)
 	{
 		spmv_dia(&vec_result, diaA, vec);
+		//omp_spmv_dia_v1(&vec_result, diaA, vec);
 	}
 	t2 = mysecond();
 

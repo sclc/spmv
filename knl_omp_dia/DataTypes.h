@@ -77,6 +77,15 @@ typedef struct
     
 }diaMat;
 
+typedef struct 
+{
+    IDX_TYPE ell_num_rows, ell_num_cols, ell_nnz;
+    IDX_TYPE ell_row_length;
+    IDX_TYPE * ell_col_idx;
+    VAL_TYPE * ell_data;
+    
+}ellMat;
+
 
 // #ifdef  __cplusplus
 // }

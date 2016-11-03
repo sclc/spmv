@@ -1,24 +1,30 @@
 #include "common.h"
 
-void delete_csrMat(csrMat mat)
+void delete_csrMat(csrMat * mat)
 {
-	free(mat.col_idx);
-	free(mat.row_start);
-	free(mat.csrdata);
+	free(mat->col_idx);
+	free(mat->row_start);
+	free(mat->csrdata);
 }
 	
-void delete_diaMat(diaMat mat)
+void delete_diaMat(diaMat * mat)
 {
-    free(mat.diag_zone);
-    free(mat.diag_offset_id);
+    free(mat->diag_zone);
+    free(mat->diag_offset_id);
 }
 
 
-void delete_cooMat(cooMat mat)
+void delete_cooMat(cooMat * mat)
 {
-	free(mat.colIdx);
-	free(mat.rowIdx);
-	free(mat.coodata);
+	free(mat->colIdx);
+	free(mat->rowIdx);
+	free(mat->coodata);
+}
+
+void delete_ellMat (ellMat * mat)
+{
+    free(mat->ell_col_idx);
+    free(mat->ell_data);
 }
 
 void draw_cooMat_pattern(cooMat mat)
@@ -52,5 +58,5 @@ void draw_cooMat_pattern(cooMat mat)
 		free (row_pattern);
 	}
 
-	delete_csrMat(csrA);
+	delete_csrMat(&csrA);
 }

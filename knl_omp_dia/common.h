@@ -16,9 +16,10 @@
 extern "C" {
 #endif
 
-	void delete_csrMat(csrMat mat);
-	void delete_diaMat(diaMat mat);
-	void delete_cooMat(cooMat mat);
+	void delete_csrMat(csrMat * mat);
+	void delete_diaMat(diaMat * mat);
+	void delete_cooMat(cooMat * mat);
+	void delete_ellMat(ellMat * mat);
 
 	void draw_cooMat_pattern(cooMat mat);
 
