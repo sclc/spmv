@@ -31,6 +31,14 @@ typedef struct {
 
 } matInfo;
 
+typedef struct {
+
+    IDX_TYPE rowid;
+    IDX_TYPE colid;
+    VAL_TYPE val;
+
+} matElement;
+
 typedef struct
 {
                  
