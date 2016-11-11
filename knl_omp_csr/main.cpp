@@ -28,7 +28,9 @@
 #define CHECK_CSR_WITH_COO
 
 //#define DEBUG_A
-#define DEBUG_B
+//#define DEBUG_B
+//#define DEBUG_B_1
+//#define DEBUG_B_2
 //#define DEBUG_C
 //#define DEBUG_D
 //#define DEBUG_E
@@ -67,29 +69,55 @@ int main (int argc, char* argv[])
 	IDX_TYPE db_idx;
 	cout<< "#row="<<cooA.num_rows<<", #col="<<cooA.num_cols<<", nnz="<<cooA.nnz<<endl;
 
-	for (db_idx=0;db_idx<cooA.nnz;db_idx++)
-	{
-		if (cooA_tmp.rowIdx[db_idx] - cooA.rowIdx[db_idx]  != 0 
-			|| cooA_tmp.colIdx[db_idx] -  cooA.colIdx[db_idx] != 0 
-			|| cooA_tmp.coodata[db_idx] - cooA.coodata[db_idx] != 0.0)
-		{
-			std::cout<< "value differs at:"<<db_idx<<std::endl;
-			std::cout<< cooA_tmp.rowIdx[db_idx] - cooA.rowIdx[db_idx] << ", "
-					<< cooA_tmp.colIdx[db_idx] -  cooA.colIdx[db_idx] << ", "
-					<< cooA_tmp.coodata[db_idx] - cooA.coodata[db_idx] << std::endl;
+	// for (db_idx=0;db_idx<cooA.nnz;db_idx++)
+	// {
+	// 	if (cooA_tmp.rowIdx[db_idx] - cooA.rowIdx[db_idx]  != 0 
+	// 		|| cooA_tmp.colIdx[db_idx] -  cooA.colIdx[db_idx] != 0 
+	// 		|| cooA_tmp.coodata[db_idx] - cooA.coodata[db_idx] != 0.0)
+	// 	{
+	// 		std::cout<< "value differs at:"<<db_idx<<std::endl;
+	// 		std::cout<< cooA_tmp.rowIdx[db_idx] - cooA.rowIdx[db_idx] << ", "
+	// 				<< cooA_tmp.colIdx[db_idx] -  cooA.colIdx[db_idx] << ", "
+	// 				<< cooA_tmp.coodata[db_idx] - cooA.coodata[db_idx] << std::endl;
 
-			//std::cout<< cooA_tmp.coodata[db_idx]<< ", "<<cooA.coodata[db_idx] << std::endl;
-			//std::cout<< cooA_tmp.rowIdx[db_idx+5]<< ", "<<cooA.rowIdx[db_idx+5] << std::endl;
+	// 		//std::cout<< cooA_tmp.coodata[db_idx]<< ", "<<cooA.coodata[db_idx] << std::endl;
+	// 		//std::cout<< cooA_tmp.rowIdx[db_idx+5]<< ", "<<cooA.rowIdx[db_idx+5] << std::endl;
+	// 		return 1;
+	// 	}
+	// }
+
+
+	// std::cout<< "readMtx_info_and_coo == readMtx_info_and_ordered_coo"<<std::endl;
+
+	for (db_idx=0;db_idx<cooA_tmp.nnz -1;db_idx++)
+	{
+		if (cooA_tmp.colIdx[db_idx] - cooA_tmp.colIdx[db_idx + 1] > 0)
+		{
+			std::cout<< "cooA_tmp wrong col order at "<<db_idx<<std::endl;
 			return 1;
 		}
 	}
 
-
-	std::cout<< "readMtx_info_and_coo == readMtx_info_and_ordered_coo"<<std::endl;
-
 	delete_cooMat(&cooA_tmp);
 
-#endif
+#endif /*DEBUG_B*/
+
+#ifdef	DEBUG_B_1
+	IDX_TYPE db_idx;
+	cout<< "#row="<<cooA.num_rows<<", #col="<<cooA.num_cols<<", nnz="<<cooA.nnz<<endl;
+
+	for (db_idx=0;db_idx<cooA.nnz -1;db_idx++)
+	{
+		if (cooA.colIdx[db_idx] - cooA.colIdx[db_idx + 1] > 0)
+		{
+			std::cout<< "sorting did not work at "<<db_idx<<std::endl;
+			return 1;
+		}
+	}
+	std::cout<< "Qsorting works good "<<std::endl;
+
+
+#endif /* DEBUG_B_1 */
 
 	Converter_Coo2Csr (cooA, &csrA);
 #ifdef DEBUG_C
@@ -113,7 +141,7 @@ int main (int argc, char* argv[])
 		cout<<endl;
 	}
 
-#endif
+#endif /* DEBUG_C */
 
 	denseMat vec_result, vec, vec_checker;
 	VAL_TYPE val_min, val_max;
@@ -127,6 +155,15 @@ int main (int argc, char* argv[])
 #ifdef CHECK_CSR_WITH_COO
 	generate_dense_mat_uniform_val(&vec_checker, csrA.num_rows, vec_ncol, 66.66);
 #endif /*CHECK_CSR_WITH_COO*/
+
+#ifdef	DEBUG_B_2
+	cooMat cooA_tmp;
+	matInfo mat_info_tmp;
+	denseMat vec_checker_2;
+	readMtx_info_and_coo(mat_path, mat_filename, &mat_info_tmp, &cooA_tmp);
+	generate_dense_mat_uniform_val(&vec_checker_2, csrA.num_rows, vec_ncol, 66.66);
+	spmv_coo(vec_checker_2, cooA_tmp, vec);
+#endif /* DEBUG_B_2 */
 
 #ifdef DEBUG_D
 
@@ -144,7 +181,15 @@ int main (int argc, char* argv[])
 #ifdef CHECK_CSR_WITH_COO
 	spmv_coo(vec_checker, cooA, vec);
 #endif /*CHECK_CSR_WITH_COO*/
-	
+
+#ifdef	DEBUG_B_2
+
+	results_comparsion (vec_checker, vec_checker_2);
+
+	std::cout<<" results_comparsion (vec_checker, vec_checker_2); pass"<<std::endl;
+
+	delete_cooMat(&cooA_tmp);
+#endif /* DEBUG_B_2 */
 	//del coo
 	delete_cooMat(&cooA);
 

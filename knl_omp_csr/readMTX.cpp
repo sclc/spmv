@@ -5,6 +5,14 @@ void readMtx_coo(char* path, char* name, cooMat mtr, matInfo info) {
 
 }
 
+int comparator ( const void *p, const void *q)
+{
+    IDX_TYPE l = ((matElement *) p) -> colid;
+    IDX_TYPE r = ((matElement *) q) -> colid;
+
+    return (l-r);
+}
+
 void readMtx_info_and_coo(string path, string name, matInfo * info, cooMat * mat) {
     int ret_code;
     int m, n, nnz;
@@ -301,6 +309,8 @@ void readMtx_info_and_ordered_coo(string path, string name, matInfo * info, cooM
 
         // re-ordering here
         // TO-DO
+        qsort (matList_final,  true_nonzeros, sizeof(matElement), comparator);
+
         IDX_TYPE* new_I = (IDX_TYPE *) calloc(true_nonzeros, sizeof (IDX_TYPE)); 
         IDX_TYPE* new_J = (IDX_TYPE *) calloc(true_nonzeros, sizeof (IDX_TYPE)); 
         VAL_TYPE* new_V = (VAL_TYPE *) calloc(true_nonzeros, sizeof (VAL_TYPE)); 
