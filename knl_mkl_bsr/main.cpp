@@ -26,12 +26,15 @@
 #endif
 
 #ifndef EXP_NUM
-#define EXP_NUM 100
+#define EXP_NUM 1
 #endif
 
 #ifndef MKL_EXP_NUM
-#define MKL_EXP_NUM 100
+#define MKL_EXP_NUM 1
 #endif
+
+// #define MKL_SPARSE_BLAS
+#define MKL_INS_EXE_SPARSE_BLAS
 
 #define CHECK_CSR_WITH_COO
 
@@ -89,11 +92,13 @@ int main (int argc, char* argv[])
 #endif /*CHECK_CSR_WITH_COO*/
 
 /* MKL SpMV start */
+#ifdef MKL_SPARSE_BLAS /*MKL_SPARSE_BLAS*/
+
 	assert( sizeof(double) == sizeof(VAL_TYPE) );
 	assert( sizeof(IDX_TYPE) == sizeof(MKL_INT) );
 
     //convert MKL CSR to MKL BSR
-    MKL_INT job[8], info=0, mblk=16, mkl_row_nums = (MKL_INT)csrA.num_rows;
+    MKL_INT job[8], info=0, mblk=2, mkl_row_nums = (MKL_INT)csrA.num_rows;
     MKL_INT ldAbsr= mblk * mblk;
     
     job[0] = 0; //the matrix in the CSR format is converted to the BSR format;
@@ -115,10 +120,6 @@ int main (int argc, char* argv[])
 	MKL_INT * mkl_bsr_colInd = (MKL_INT *) calloc ( num_blocks, sizeof(MKL_INT));
 	MKL_INT * mkl_csr_rowInd = (MKL_INT *) calloc ( num_block_row+1, sizeof(MKL_INT) );
 
-
-
-	struct matrix_descr mkl_descrA;
-	sparse_matrix_t mkl_bsrA;
 
 /*
     void mkl_dcsrbsr (const MKL_INT *job , const MKL_INT *m , const MKL_INT *mblk , const MKL_INT *ldabsr 
@@ -168,6 +169,104 @@ void mkl_cspblas_dbsrgemv (const char *transa , const MKL_INT *m , const MKL_INT
     mkl_spmv_overhead_accumulator /= (double)MKL_EXP_NUM;
     cout<< setprecision(12)<<mkl_spmv_overhead_accumulator<<"sec passed(per loop)"<<endl;
 	cout<< "performance:"<<setprecision(12)<<( (double)(2*csrA.nnz)/(double)(1024*1024*1024) )/mkl_spmv_overhead_accumulator <<"GFlops"<<endl;
+
+#endif /* MKL_SPARSE_BLAS */
+
+#ifdef MKL_INS_EXE_SPARSE_BLAS /* MKL_INS_EXE_SPARSE_BLAS */
+
+	assert( sizeof(double) == sizeof(VAL_TYPE) );
+	assert( sizeof(IDX_TYPE) == sizeof(MKL_INT) );
+
+    //convert MKL CSR to MKL BSR
+    MKL_INT job[8], info=0, mblk=2, mkl_row_nums = (MKL_INT)csrA.num_rows;
+    MKL_INT ldAbsr= mblk * mblk;
+    
+    job[0] = 0; //the matrix in the CSR format is converted to the BSR format;
+    job[1] = 0; //zero-based indexing for the matrix in CSR format is used;
+    job[2] = 0; //zero-based indexing for the matrix in the BSR format is used
+    job[5] = 1; //all output arrays absr, jab, and iab are filled in for the output storage.
+
+	// declare space for mkl_bsr
+	// mat must be square
+	MKL_INT num_blocks = (MKL_INT)calculate_bsr_num_blocks (csrA, (IDX_TYPE)mblk);
+
+	printf ("mblk = %d, num_blocks = %d\n",  mblk, num_blocks);
+
+
+	MKL_INT num_block_row = csrA.num_rows / mblk;
+	assert (num_block_row * mblk == csrA.num_rows);
+
+	double * mkl_bsrdata = (double*)calloc( num_blocks*ldAbsr, sizeof(double));
+	MKL_INT * mkl_bsr_colInd = (MKL_INT *) calloc ( num_blocks, sizeof(MKL_INT));
+	MKL_INT * mkl_csr_rowInd = (MKL_INT *) calloc ( num_block_row+1, sizeof(MKL_INT) );
+
+
+/*
+    void mkl_dcsrbsr (const MKL_INT *job , const MKL_INT *m , const MKL_INT *mblk , const MKL_INT *ldabsr 
+					, double *acsr , MKL_INT *ja , MKL_INT *ia 
+					, double *absr , MKL_INT *jab , MKL_INT *iab , MKL_INT *info );
+*/
+	mkl_dcsrbsr(job, &mkl_row_nums, &mblk, &ldAbsr
+				, csrA.csrdata, csrA.col_idx, csrA.row_start
+				, mkl_bsrdata, mkl_bsr_colInd, mkl_csr_rowInd, &info);
+	printf ("info=%d \n", info);
+
+
+	struct matrix_descr mkl_descrA;
+	// Create matrix descriptor
+    mkl_descrA.type = SPARSE_MATRIX_TYPE_GENERAL;
+
+	sparse_matrix_t mkl_bsrA;
+
+/*
+sparse_status_t mkl_sparse_d_create_bsr (sparse_matrix_t *A, sparse_index_base_t indexing, sparse_layout_t block_layout
+										, MKL_INT rows, MKL_INT cols, MKL_INT block_size
+										, MKL_INT *rows_start, MKL_INT *rows_end, MKL_INT *col_indx, double *values);
+*/
+	mkl_sparse_d_create_bsr(&mkl_bsrA, SPARSE_INDEX_BASE_ZERO, SPARSE_LAYOUT_ROW_MAJOR
+							, num_block_row, num_block_row, mblk
+							, mkl_csr_rowInd, mkl_csr_rowInd+1, mkl_bsr_colInd, mkl_bsrdata);
+
+	// Analyze sparse matrix; choose proper kernels and workload balancing strategy
+    mkl_sparse_optimize ( mkl_bsrA );
+
+    double mkl_t1, mkl_t2;
+    double mkl_spmv_overhead_accumulator = 0.0;
+
+    double mkl_alpha= 1.0, mkl_beta = 0.0;
+    int mkl_exp_counter;
+    double * mkl_spmv_result = NULL;
+
+    for ( mkl_exp_counter = 0; mkl_exp_counter < MKL_EXP_NUM; mkl_exp_counter++)
+    {
+
+    	// free and reallocate
+    	if (mkl_spmv_result != NULL) free(mkl_spmv_result);
+    	mkl_spmv_result = (double *) calloc ( csrA.num_rows, sizeof(double));
+
+    	mkl_t1 = mysecond();
+    	
+    	// y := alpha*op(A)*x + beta*y
+    	mkl_sparse_d_mv ( SPARSE_OPERATION_NON_TRANSPOSE,
+          	            mkl_alpha,
+          	            mkl_bsrA,
+          	            mkl_descrA,
+           	            vec.data, // x
+           	            mkl_beta,
+           	            mkl_spmv_result ); // y
+
+    	mkl_t2 = mysecond();
+    	mkl_spmv_overhead_accumulator += mkl_t2-mkl_t1;
+    }
+    mkl_spmv_overhead_accumulator /= (double)MKL_EXP_NUM;
+    cout<< setprecision(12)<<mkl_spmv_overhead_accumulator<<"sec passed(per loop)"<<endl;
+	cout<< "performance:"<<setprecision(12)<<( (double)(2*csrA.nnz + 3*csrA.num_rows)/(double)(1024*1024*1024) )/mkl_spmv_overhead_accumulator <<"GFlops"<<endl;
+
+
+	// Release matrix handle and deallocate matrix
+    mkl_sparse_destroy ( mkl_bsrA );
+
+#endif /* MKL_INS_EXE_SPARSE_BLAS */
 
 /* MKL SpMV end */
 
