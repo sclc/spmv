@@ -2,6 +2,8 @@
 #include "mmio.h"
 #include <string>
 #include <assert.h>
+#include <stdlib.h>
+
 using namespace std;
 
 
@@ -24,3 +26,5 @@ void readMtx_coo(char* path, char* name, cooMat mtr, matInfo info);
 #endif
 
 void readMtx_info_and_coo(string path, string name, matInfo* info, cooMat* mat);
+void readMtx_info_and_ordered_coo(string path, string name, matInfo * info, cooMat * mat);
+int comparator ( const void *p, const void *q);
