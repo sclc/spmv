@@ -23,7 +23,7 @@
 #endif
 
 #ifndef EXP_NUM
-#define EXP_NUM 50
+#define EXP_NUM 1
 #endif
 
 #define CHECK_RES_WITH_COO
@@ -58,7 +58,8 @@ int main (int argc, char* argv[])
 	double t1,t2;
 
 
-	readMtx_info_and_coo(mat_path, mat_filename, &mat_info, &cooA);
+	readMtx_info_and_ordered_coo(mat_path, mat_filename, &mat_info, &cooA);
+	// readMtx_info_and_coo(mat_path, mat_filename, &mat_info, &cooA2);
 #ifdef DEBUG_B
 	
 	IDX_TYPE db_idx;
